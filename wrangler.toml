@@ -1,0 +1,8 @@
+name = "flippinflops-com"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flippinflops-db"
+database_id = "a1b5457f-33ed-45a9-a580-b7a7241fadd8"

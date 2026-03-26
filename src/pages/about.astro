@@ -1,0 +1,27 @@
+---
+export const prerender = true;
+
+import Base from '@/layouts/Base.astro';
+import NewsletterForm from '@/components/NewsletterForm.astro';
+---
+
+<Base title="About" description="About Flippin' Flops and its author.">
+  <article class="prose">
+    <h1>About</h1>
+    <p>
+      I'm Brett. I live at elevation in the high desert and I wear flip flops to everything.
+      This is where I write about it.
+    </p>
+    <p>
+      The high desert has a way of humbling you — the altitude, the temperature swings, the
+      afternoon thunderstorms that materialize out of nowhere and vanish just as fast.
+      I figure the least I can do is show up to it in appropriate footwear.
+    </p>
+    <p>
+      If you have questions, complaints about my footwear choices, or trail recommendations,
+      you can reach me at <a href="mailto:hello@flippinflops.com">hello@flippinflops.com</a>.
+    </p>
+  </article>
+
+  <NewsletterForm />
+</Base>
