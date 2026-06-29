@@ -4,3 +4,4 @@ export const SITE_DESCRIPTION =
 export const SITE_URL = "https://flippinflops.com";
 export const AUTHOR = "Brett";
 export const FROM_EMAIL = "Brett <hello@flippinflops.com>";
+export const RESEND_AUDIENCE_ID = "ba455cc3-7f62-4780-b470-fbd9436e9972";

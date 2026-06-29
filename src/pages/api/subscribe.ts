@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { FROM_EMAIL, SITE_TITLE } from '@/consts';
+import { FROM_EMAIL, SITE_TITLE, SITE_URL } from '@/consts';
 
 export const prerender = false;
 
@@ -18,22 +18,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return json({ message: 'Please enter a valid email address.' }, 400);
   }
 
+  const token = crypto.randomUUID();
+
   try {
     await env.DB.prepare(
-      'INSERT INTO subscribers (email) VALUES (?)'
-    ).bind(email).run();
+      'INSERT INTO subscribers (email, token) VALUES (?, ?)'
+    ).bind(email, token).run();
   } catch (err: unknown) {
-    // D1 UNIQUE constraint violation → already subscribed
     if (err instanceof Error && err.message.includes('UNIQUE')) {
-      return json({ message: "You're already on the list!" }, 200);
+      const row = await env.DB.prepare(
+        'SELECT confirmed FROM subscribers WHERE email = ?'
+      ).bind(email).first<{ confirmed: number }>();
+
+      if (row?.confirmed) {
+        return json({ message: "You're already subscribed!" }, 200);
+      }
+      return json({ message: "Check your inbox — a confirmation email is on its way." }, 200);
     }
     console.error('D1 error:', err);
     return json({ message: 'Something went wrong. Please try again.' }, 500);
   }
 
-  // Send welcome email via Resend
+  const confirmUrl = `${SITE_URL}/api/confirm?token=${token}`;
+
   try {
-    await fetch('https://api.resend.com/emails', {
+    const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -42,22 +51,24 @@ export const POST: APIRoute = async ({ request, locals }) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [email],
-        subject: `Welcome to ${SITE_TITLE}`,
-        html: `<p>You're in! I'll send you a note when there's something new to read.</p>
-               <p>— Brett</p>
-               <hr/>
-               <p style="color:#78716c;font-size:12px;">
-                 You subscribed at flippinflops.com.
-                 Reply to this email to unsubscribe.
-               </p>`,
+        subject: `Confirm your subscription to ${SITE_TITLE}`,
+        html: `
+          <p>Thanks for signing up! Click the link below to confirm your subscription:</p>
+          <p><a href="${confirmUrl}">${confirmUrl}</a></p>
+          <p>If you didn't request this, you can safely ignore this email.</p>
+          <hr/>
+          <p style="color:#78716c;font-size:12px;">You're receiving this because someone entered this address at flippinflops.com.</p>
+        `,
       }),
     });
+    if (!resendRes.ok) {
+      console.error('Resend error:', resendRes.status, await resendRes.text());
+    }
   } catch (err) {
-    // Non-fatal — subscriber is saved, welcome email failed
     console.error('Resend error:', err);
   }
 
-  return json({ message: "You're subscribed! Check your inbox for a welcome note." }, 201);
+  return json({ message: "Check your inbox — click the confirmation link to finish subscribing." }, 201);
 };
 
 function json(body: Record<string, string>, status: number): Response {

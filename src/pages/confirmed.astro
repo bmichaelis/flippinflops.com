@@ -1,0 +1,35 @@
+---
+export const prerender = false;
+
+import Base from '@/layouts/Base.astro';
+
+const status = Astro.url.searchParams.get('status');
+
+const states = {
+  ok: {
+    heading: "You're confirmed!",
+    body: "You're on the list. I'll be in touch when there's something new to read.",
+  },
+  already: {
+    heading: "Already confirmed",
+    body: "You're already subscribed. Nothing to do here.",
+  },
+  invalid: {
+    heading: "Invalid link",
+    body: "This confirmation link isn't valid or has already been used. Try subscribing again.",
+  },
+};
+
+const { heading, body } = states[status as keyof typeof states] ?? states.invalid;
+---
+
+<Base title={heading} description={body}>
+  <div class="text-center py-16">
+    <div class="text-5xl mb-6">🩴</div>
+    <h1 class="font-serif text-3xl font-bold text-stone-900 mb-4">{heading}</h1>
+    <p class="text-stone-500 max-w-sm mx-auto">{body}</p>
+    <a href="/" class="inline-block mt-8 text-sm text-[#c2743f] hover:text-[#8c4c1f] underline underline-offset-4">
+      Back to the blog
+    </a>
+  </div>
+</Base>
